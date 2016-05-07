@@ -26,36 +26,56 @@ function User(name, login) {
 		
 	};
 	this.registration = function() {
-		var connection = new WebSocket('ws://localhost:5000');
-		var jsonLoginData = this.prepareLoginJson();
-		connection.onmessage = function(e) {
-		    //пришло сообщение от сервер, надо его обработать
-		    console.log(e);
-		    var res = JSON.parse(e.data);
-		    switch(res.op) {
-		    	case 'error': 
-		    		alert('Сервер вернул ошибку при попытке зарегистрироваться: ' + res.op.error.message);
-		    		return null;
-		    	case 'token':
-		    		return res.token;	
-		    	default:
-		    		console.log(res);
-		    		throw new Error('Этот ответ пока никак не обрабатывается. Смотри console log');	
-		    };
-		};
-		connection.onerror = function(e) {
-		    //ошибка соединения
-		    console.log(e);
-		};
-		connection.onerror = function(e) {
-		    //соединение было закрыто
-		    console.log(e.error);
-		};
-		connection.onopen = function(e) {
-			//соединение установлено
-		    //отправить запрос о регистрации
-		    connection.send(jsonLoginData);
-		};
+		var p = new Promise(function (resolve, reject) {
+			var connection = new WebSocket('ws://localhost:5000');
+			var jsonLoginData = this.prepareLoginJson();
+			connection.onmessage = function(e) {
+			    //пришло сообщение от сервер, надо его обработать
+			    console.log(e);
+			    var res = JSON.parse(e.data);
+			    switch(res.op) {
+			    	case 'error': 
+				    	alert('Сервер вернул ошибку при попытке зарегистрироваться: ' + res.op.error.message);
+				    	reject(null);
+				    	break;
+			    	case 'token':
+			    		resolve(res.token);	
+			    		break;
+			    	default:
+				    	console.log(res);
+				    	reject(Error('Этот ответ пока никак не обрабатывается. Смотри console log'));
+				    	break;
+			    };
+			};
+			connection.onerror = function(e) {
+			    //ошибка соединения
+			    console.log(e);
+			    reject(e);
+			};
+			connection.onerror = function(e) {
+			    //соединение было закрыто
+			    console.log(e.error);
+			    reject(e);
+			};
+			connection.onopen = function(e) {
+				//соединение установлено
+			    //отправить запрос о регистрации
+			    try
+			    {
+			    	connection.send(jsonLoginData);
+			    }
+			    catch(e)
+			    {
+			    	reject(e);
+			    }
+			};
+		});
+
+		p.then(
+			function(result){
+				this.token = result;
+			});
+		return p;
 	}
 }
 

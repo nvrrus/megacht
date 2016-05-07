@@ -12,8 +12,17 @@ describe('Тесты регистрации', function() {
 	});
 	it('Логин из букв и цифр подходит для регистрации', function() {
 		var reg = new User('Никита', '123qwe');
-		assert.isDefined(reg.registration());
-		assert.isNotNull(reg.registration());
-
+		var p = reg.registration();
+		assert.isNotNull(p);
+		assert.isDefined(p);
+		p.then(
+			function(resultToken){
+				assert.isNotNull(resultToken);
+				assert.isDefined(resultToken);
+			}, 
+			function(error){
+				assert.isTrue(false, error);
+			}
+		);
 	});
 });
