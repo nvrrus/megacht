@@ -1,59 +1,63 @@
-function Calculator(firstNumber) {
-	this.firstNumber = firstNumber;
-}
+function User(name, login) {
+	this.checkLogin = function(login) {
+		
+		var expr = /^[a-z0-9]+$/i;
+		
+		if(expr.test(login))
+			return true;
 
-Calculator.prototype.sum = function()
-{
-	var res = this.firstNumber;
-	for (var i = 0; i <  arguments.length; i++) {
-		res += arguments[i];
+		throw new Error("Ошибка авторизации. Введенн некорректный логин (" + login + "). Логин может состоять только из букв и цифр!");
+	};
+	this.checkLogin(login);
+	this.name = name;
+	this.login = login;
+	
+	this.prepareLoginJson = function() {
+
+		var loginObj = {
+			op: 'reg',
+			data: {
+				name: this.name,
+				login: this.login
+			}
+		};
+
+		return JSON.stringify(loginObj);
+		
+	};
+	this.registration = function() {
+		var connection = new WebSocket('ws://localhost:5000');
+		var jsonLoginData = this.prepareLoginJson();
+		connection.onmessage = function(e) {
+		    //пришло сообщение от сервер, надо его обработать
+		    console.log(e);
+		    var res = JSON.parse(e.data);
+		    switch(res.op) {
+		    	case 'error': 
+		    		alert('Сервер вернул ошибку при попытке зарегистрироваться: ' + res.op.error.message);
+		    		return null;
+		    	case 'token':
+		    		return res.token;	
+		    	default:
+		    		console.log(res);
+		    		throw new Error('Этот ответ пока никак не обрабатывается. Смотри console log');	
+		    };
+		};
+		connection.onerror = function(e) {
+		    //ошибка соединения
+		    console.log(e);
+		};
+		connection.onerror = function(e) {
+		    //соединение было закрыто
+		    console.log(e.error);
+		};
+		connection.onopen = function(e) {
+			//соединение установлено
+		    //отправить запрос о регистрации
+		    connection.send(jsonLoginData);
+		};
 	}
-	return res;
 }
 
-Calculator.prototype.dif = function() {
-	var res = this.firstNumber;
-	for (var i = 0; i <  arguments.length; i++) {
-		res -= arguments[i];
-	}
-	return res;
-}
-
-function MyCalculator(firstNumber) {
-	this.firstNumber = firstNumber;
-}
-
-MyCalculator.prototype = Object.create(Calculator.prototype);
-
-MyCalculator.prototype.sum = function() {
-	console.log("Переопределенный sum");
-	return Calculator.prototype.sum.apply(this, arguments);
-}
-
-MyCalculator.prototype.div = function() {
-	var res = this.firstNumber;
-	for (var i = 0; i <  arguments.length; i++) {
-		res /= arguments[i];
-	}
-	return res;
-}
-
-MyCalculator.prototype.mul = function() {
-	var res = this.firstNumber;
-	for (var i = 0; i <  arguments.length; i++) {
-		res *= arguments[i];
-	}
-	return res;
-}
-
-var calc2 = new MyCalculator(100);
-console.log(calc2.div(5));
-console.log(calc2.div(5, 2));
-console.log(calc2.mul(10));
-console.log(calc2.sum(10));
-console.log(calc2.dif(10));
-
-var calc1 = new Calculator(100);
-console.log(calc1.sum(10));
-console.log(calc1.dif(10));
-
+//var user = new User('Никита', 'nvrrus');
+//reg.registration();
