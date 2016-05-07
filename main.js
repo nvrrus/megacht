@@ -26,9 +26,12 @@ function User(name, login) {
 		
 	};
 	this.registration = function() {
+		this.token = null;
+		var token = this.token;
+		var jsonLoginData = this.prepareLoginJson();
 		var p = new Promise(function (resolve, reject) {
 			var connection = new WebSocket('ws://localhost:5000');
-			var jsonLoginData = this.prepareLoginJson();
+
 			connection.onmessage = function(e) {
 			    //пришло сообщение от сервер, надо его обработать
 			    console.log(e);
@@ -50,12 +53,12 @@ function User(name, login) {
 			connection.onerror = function(e) {
 			    //ошибка соединения
 			    console.log(e);
-			    reject(e);
+			    reject("Ошибка соединения");
 			};
-			connection.onerror = function(e) {
+			connection.onclose = function(e) {
 			    //соединение было закрыто
 			    console.log(e.error);
-			    reject(e);
+			    reject("Соединение было закрыто");
 			};
 			connection.onopen = function(e) {
 				//соединение установлено
@@ -78,6 +81,3 @@ function User(name, login) {
 		return p;
 	}
 }
-
-//var user = new User('Никита', 'nvrrus');
-//reg.registration();
