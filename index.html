@@ -28,9 +28,13 @@
 	  <ul id="ulUsers">
 	  	{{#each list}}
 	  	<li>
-	  		<img alt='Аватар' src="imges/avatar.png">
-	  		<span>{{name}}</span>
-	  		<span>({{login}})</span>
+	  		<div class="userBlock">
+		  		<img class="avatar" alt='Аватар' src="imges/avatar.png">
+		  		<div class="userInfo">
+			  		<span>{{name}}</span>
+			  		<span>({{login}})</span>		
+		  		</div>	
+	  		</div>
 	  	</li>
 	  	{{/each}}
 	  </ul>
@@ -39,12 +43,19 @@
 	  <ul id="ulMessages">
 	  	{{#each list}}
 	  	<li>
-	  		<p>
-	  		<span class='mesTime'>{{time}}</span>
-	  		<span class='mesName'> {{user.name}}</span>
-	  		<span class='mesLogin'>({{user.login}})</span>
-	  		{{body}}
-	  		</p>
+	  		<div class='messageBlock'>
+	  			<img class='avatar' alt='Аватар' src='imges/avatar.png'>
+		  		<div class='messageInfo'>
+		  			<p>
+		  				<span class='mesName'> {{user.name}}</span>
+			  			<span class='mesLogin'>({{user.login}}):</span>
+			  			<span class='mesTime'>{{formatTime time}}</span>
+		  			</p>
+		  			<p>
+		  				{{body}}
+		  			</p>
+		  		<div>
+	  		</div>
 	  	</li>
 	  	{{/each}}
 	  </ul>

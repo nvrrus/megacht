@@ -11,6 +11,16 @@ new Promise(function(resolve) {
 		window.onload = resolve;
 	}
 }).then(function() {
+	Handlebars.registerHelper("formatTime", function(timestamp) {
+		var d = new Date();
+		d.setTime(timestamp);
+		// var curr_date = d.getDate(),
+		// curr_month = d.getMonth() + 1,
+		// curr_year = d.getFullYear();
+
+  //   	return curr_year + "-" + curr_month + "-" + curr_date;
+  		return d.toISOString().slice(0, 10);
+	});
 	// Подписываемся на клик по кнопке "Регистрации пользователя"
 	btnRegistration.addEventListener('click', onClickRegistration);
 	inpUserMessage.addEventListener('keypress', onInpMessageKeyPress);
@@ -30,6 +40,7 @@ function onClickRegistration() {
 }
 
 function getTemplateHTML(templateHTML, sourceObj) {
+	
 	templateFn = Handlebars.compile(templateHTML);
 	return templateFn({list: sourceObj});
 };
@@ -72,6 +83,7 @@ function Chat(users, messages, server) {
 	};
 	this.updateMessagesHtml = function() {
 		divMessages.innerHTML = getTemplateHTML(messagesTemplate.innerHTML, this.messages);
+		
 	};
 	
 	this.updateUsersHtml();
