@@ -4,8 +4,50 @@
 	<meta charset="utf-8">
 	<link rel="stylesheet" type="text/css" href="style.css">
 	<script src="main.js" type="text/javascript"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+	
 </head>
 <body id="body">
- 
+	<div id="divRegPanel">
+		<input id='inpName' placeholder="Ваше имя"></input>
+	 	<input id='inpLogin' placeholder="Ваш логин"></input>
+	 	<button id='btnRegistration'>Зарегистрироваться</button>	
+	</div>
+ 	<div id="divChatPanel" class="hide">
+ 		<div id="leftCol">
+ 			
+ 		</div>
+ 		<div id="rightCol">
+ 			<div id="divMessages">
+ 				
+ 			</div>
+ 			<input id="inpUserMessage"></input>	
+ 		</div>
+ 	</div>
+ 	<script id="usersTemplate" type="text/x-handlebars-template">
+	  <ul id="ulUsers">
+	  	{{#each list}}
+	  	<li>
+	  		<img alt='Аватар' src="imges/avatar.png">
+	  		<span>{{name}}</span>
+	  		<span>({{login}})</span>
+	  	</li>
+	  	{{/each}}
+	  </ul>
+	</script>
+	<script id="messagesTemplate" type="text/x-handlebars-template">
+	  <ul id="ulMessages">
+	  	{{#each list}}
+	  	<li>
+	  		<p>
+	  		<span class='mesTime'>{{time}}</span>
+	  		<span class='mesName'> {{user.name}}</span>
+	  		<span class='mesLogin'>({{user.login}})</span>
+	  		{{body}}
+	  		</p>
+	  	</li>
+	  	{{/each}}
+	  </ul>
+	</script>
 </body>
 </html>

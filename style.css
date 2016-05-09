@@ -1,0 +1,35 @@
+ul {
+	margin-top: 20px; 
+	border: 2px solid black;
+	padding: 0px;
+	margin: 0px;
+}
+
+#inpUserMessage {
+	width: 100%;
+}
+
+#ulUsers {
+	height: 300px;
+}
+
+#ulMessages {
+	height: 300px;
+}
+
+.hide {
+	display: none;
+}
+
+#leftCol {
+	float: left;
+	width: 30%;
+}
+
+#rightCol {
+	margin-left: 30%;
+}
+
+.mesBody {
+	word-wrap: break-word;
+}
