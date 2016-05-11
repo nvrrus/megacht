@@ -8,6 +8,18 @@
 	
 </head>
 <body id="body">
+	<div class='hide' id='divModalWindow'>
+ 		<div id='divChangeAvatar'>
+	 		<div id='divAvatarHelp'>
+	 			<p class='hide' id='pDragMessage'>Перетащите сюда фотографию (только jpg, размер не более 512 кб)</p>
+	 			<div id='divPreviewBlock'>
+		 			<img id='imgPreview' alt="Предпросмотр..." >
+		 			<button id='btnUpload'>Загрузить</button>
+		 			<button id='btnCancel'>Отмена</button>	
+	 			</div>
+	 		</div>
+	 	</div>	
+	</div>
 	<div id="divRegPanel">
 		<input id='inpName' placeholder="Ваше имя"></input>
 	 	<input id='inpLogin' placeholder="Ваш логин"></input>
@@ -24,12 +36,13 @@
  			<input id="inpUserMessage"></input>	
  		</div>
  	</div>
+ 	
  	<script id="usersTemplate" type="text/x-handlebars-template">
 	  <ul id="ulUsers">
 	  	{{#each list}}
 	  	<li>
 	  		<div class="userBlock">
-		  		<img class="avatar" alt='Аватар' src="imges/avatar.png">
+		  		<img class="avatar" alt='Аватар' src={{avatar}}>
 		  		<div class="userInfo">
 			  		<span>{{name}}</span>
 			  		<span>({{login}})</span>		
@@ -44,11 +57,11 @@
 	  	{{#each list}}
 	  	<li>
 	  		<div class='messageBlock'>
-	  			<img class='avatar' alt='Аватар' src='imges/avatar.png'>
+	  			<img class='avatar' alt='Аватар' src={{avatar}}>
 		  		<div class='messageInfo'>
 		  			<p>
-		  				<span class='mesName'> {{user.name}}</span>
-			  			<span class='mesLogin'>({{user.login}}):</span>
+		  				<span class='mesName'> {{name}}</span>
+			  			<span class='mesLogin'>({{login}}):</span>
 			  			<span class='mesTime'>{{formatTime time}}</span>
 		  			</p>
 		  			<p>

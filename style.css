@@ -1,4 +1,9 @@
-body,html{height:100%}
+body,html {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+
+}
 
 ul {
 	margin-top: 20px; 
@@ -24,6 +29,7 @@ ul {
 	position: fixed;
 	bottom: 10px;
 	right: 10px;
+	z-index: 1;
 }
 
 #ulUsers,
@@ -50,6 +56,8 @@ ul {
 
 .avatar {
 	float: left;
+	height: 50px;
+	width: 50px;
 }
 
 .messageInfo,
@@ -73,5 +81,48 @@ li {
 }
 
 li:hover {
-	background-color: #F9F9F9;
+	background-color: #f9f9f9;
+}
+
+#divModalWindow {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: #f9f9f9;
+	z-index: 2;
+}
+
+#divChangeAvatar:hover {
+   background: #ddd;
+    border-color: #aaa;
+}
+
+#divChangeAvatar.error {
+    background: #faa;
+    border-color: #f00;
+}
+
+#divChangeAvatar.drop {
+    background: #afa;
+    border-color: #0f0;
+}
+
+
+#divChangeAvatar {
+	position: relative;
+	width: 300px;
+	height: 100px;
+	left: 50%;
+	top: 50%;
+	margin-top: -50px;
+	margin-left: -150px;  
+	border: 2px dashed gray;
+}
+
+#imgPreview {
+	height: 80px; 
+	width: 80px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-left: 10px;
 }
