@@ -1,9 +1,10 @@
-// 'ws://localhost:5000'
-var server;
-var chat;
-var user;
-var modalWindow;
+var serverAdr = 'ws://localhost:5000',
+server,
+chat,
+user,
+modalWindow;
 
+// Основной промис на загрузку страницы
 new Promise(function(resolve) {
 	if(document.readyState === 'complete') {
 		resolve();
@@ -12,53 +13,56 @@ new Promise(function(resolve) {
 		window.onload = resolve;
 	}
 }).then(function() {
+	//Хелпер для отображения даты сообщения шаблонизатором
 	Handlebars.registerHelper("formatTime", function(timestamp) {
 		var d = new Date();
 		d.setTime(timestamp);
-		// var curr_date = d.getDate(),
-		// curr_month = d.getMonth() + 1,
-		// curr_year = d.getFullYear();
-
-  //   	return curr_year + "-" + curr_month + "-" + curr_date;
   		return d.toISOString().slice(0, 10);
 	});
+
 	// Подписываемся на клик по кнопке "Регистрации пользователя"
 	btnRegistration.addEventListener('click', onClickRegistration);
 	inpUserMessage.addEventListener('keypress', onInpMessageKeyPress);
-	leftCol.addEventListener('click', onClickLeftCol);
 	modalWindow = new ModalWindow();
 });
 
-// Обработка клика по аватару пользователя
-function onClickLeftCol(e) {
+// Обработка клика по аватару зарегистрированного пользователя
+function onClickChangeAvatar(e) {
 	console.log(e);
-	if(!e.target.classList.contains('avatar'))
-		return;
-
+	
 	// Скрываем представление выбранного аватара
 	modalWindow.showPreview(false);
 	// Открываем модальное окно
 	modalWindow.showModal(true);
 }
 
+// Обработка ввода нового сообщения
 function onInpMessageKeyPress(e) {
 	if(e.keyCode === 13)
 	{
 		user.sendMessage(inpUserMessage.value);
+		inpUserMessage.value = "";
 	}
 }
 
+// Обработка клика по регистрации
 function onClickRegistration() {
 	user = new User(inpName.value, inpLogin.value);
 	user.registration();
 }
 
 function getTemplateHTML(templateHTML, sourceObj) {
-	
+	sourceObj.sort(function(a, b){
+		if(b.token != null)
+			return 1;
+		
+		return -1;
+	});
 	templateFn = Handlebars.compile(templateHTML);
 	return templateFn({list: sourceObj});
 };
 
+// Объект  модального окна выбора аватара
 function ModalWindow() {
 	var that = this;
 	divModalWindow.addEventListener('click', function onClickModalWindow(e) {
@@ -69,11 +73,15 @@ function ModalWindow() {
 	this.showModal = function(visible){
 		if(visible) {
 			if(divModalWindow.classList.contains('hide'))
-				divModalWindow.classList.remove('hide');	
+				divModalWindow.classList.remove('hide');
+			if(divChangeAvatar.classList.contains('hide'))
+				divChangeAvatar.classList.remove('hide');
 		} 
 		else {
 			if(!divModalWindow.classList.contains('hide'))
 				divModalWindow.classList.add('hide');	
+			if(!divChangeAvatar.classList.contains('hide')) 
+				divChangeAvatar.classList.add('hide');	
 		}
 	};
 	this.showPreview = function(visible) {
@@ -146,14 +154,17 @@ function ModalWindow() {
 	});
 
 	this.onClickUpload = function() {
+		divChangeAvatar.classList.remove('drop');
 		that.showModal(false);
 		user.changeAvatar();
 	};
 	this.onClickCancel = function(){
+		divChangeAvatar.classList.remove('drop');
 		that.showPreview(false);
 	};
 }
 
+// Объект сервера
 function Server(serverAddres) {
 	this.wsAddress = 'ws://' + serverAddres;
 	this.httpAddress = 'http://' + serverAddres;
@@ -183,6 +194,7 @@ function Server(serverAddres) {
 	};
 }
 
+// Объект сообщений
 function Message(body, user, time) {
 	this.body = body;
 	this.time = time;
@@ -198,6 +210,7 @@ function Message(body, user, time) {
 	};
 }
 
+// Объект чата
 function Chat(users, messages, server) {
 	var that = this;
 	this.users = users;
@@ -213,11 +226,6 @@ function Chat(users, messages, server) {
 		});
 		if(res === null){
 			var notActiveUser = new User(userName, userLogin);
-			var promise = notActiveUser.getAvatar();
-			promise.then(function(){
-				that.updateUsersHtml();
-				that.updateMessagesHtml();	
-			});
 			users.push(notActiveUser);
 			return notActiveUser;
 		}
@@ -232,47 +240,105 @@ function Chat(users, messages, server) {
 	messages.forEach(function(mes){
 		that.messages.push(new Message(mes.body, that.getUser(mes.user.login, mes.user.name), mes.time));
 	});
-	
+
 	this.server = server;
 
-	this.updateUsersHtml = function() {
-		leftCol.innerHTML = getTemplateHTML(usersTemplate.innerHTML, this.getActiveUsers());
+	this.updateUsersPhoto = function(users) {
+		var arrayOfPromises = [];
+		for (var i = 0; i < users.length; i++) {
+			arrayOfPromises.push(users[i].getAvatar());
+		}
+			
+		return Promise.all(arrayOfPromises);
 	};
-	this.updateMessagesHtml = function() {
-		divMessages.innerHTML = getTemplateHTML(messagesTemplate.innerHTML, this.messages);
 
+	// Загружаем все аватарки всех пользователей
+	var promise = this.updateUsersPhoto(this.users);
+	promise.then(
+		response => {
+			// Когда все фотки загружены, делаем обновление страницы по шаблонам 
+			that.updateUsersHtml();
+			that.updateMessagesHtml();
+		},
+		error => alert(error)
+	);
+
+	// Обновляет окно пользователей чата
+	this.updateUsersHtml = function() {
+		ulUsers.innerHTML = getTemplateHTML(usersTemplate.innerHTML, this.getActiveUsers());
+		var regUserElement = document.getElementById(user.login);
+		regUserElement.classList.add('regUser');
+		regUserElement.addEventListener('click', onClickChangeAvatar);
 	};
-	
-	this.updateUsersHtml();
-	this.updateMessagesHtml();
-	
+	// Обновляет окно сообщений чата
+	this.updateMessagesHtml = function() {
+		ulMessages.innerHTML = getTemplateHTML(messagesTemplate.innerHTML, this.messages);
+	};
+	// Обновляет пользователя чата и его сообщения
+	this.updateUserHtml = function(user) {
+		var changeElements = ulUsers.querySelectorAll('[data-login="' + user.login  +'"]');
+		this.updateSrcAvatar(changeElements, user.avatar); 
+		that.updateMessagesOfUserHtml(user);
+	};
+	// Обновляет сообщения пользователя чата
+	this.updateMessagesOfUserHtml = function(user) {
+		var changeElements = ulMessages.querySelectorAll('[data-login="' + user.login  +'"]');
+		this.updateSrcAvatar(changeElements, user.avatar);
+	};
+	this.updateSrcAvatar = function(elements, avatarSrc){
+		if(elements == null || elements == undefined)
+			return;
+
+		for (var i = 0; i < elements.length; i++) {
+			elements[i].firstChild.firstChild.src = avatarSrc;
+		}
+	}
+
 	this.addNewUser = function(user) {
 		this.users.push(user);
-		this.updateUsersHtml();
+		var sourceObj = [];
+		sourceObj.push(user);
+		ulUsers.innerHTML = ulUsers.innerHTML + getTemplateHTML(usersTemplate.innerHTML, sourceObj);
+		// Загрузка аватара нового пользователя, после загрузки, обновление его фотки в чате
+		user.getAvatar().then(
+			result => {
+				this.updateUserHtml(user);
+			}
+		)
 		//alert("Новый пользователь вошел в чат: name=" + user.name + ', login=' + user.login);
 	};
 	this.removeUser = function(userLogin) {
-		that.users.forEach(function(item, index){
-			if(item.login == userLogin)
-				that.users.splice(index, 1);
-		});
-		this.updateUsersHtml();
+		var elements = ulUsers.querySelectorAll('[data-login="' + userLogin  +'"]');
+		if(elements == null || elements == undefined)
+			return;
+
+		for (var i = 0; i < elements.length; i++) {
+			ulUsers.removeChild(elements[i])
+		}
 		//alert("Пользователь вышел из чата: name=" + user.name + ', login=' + user.login);
 	};
 	this.newMessage = function(user, body, time) {
-		this.messages.push(new Message(body, user, time));
-		this.updateMessagesHtml();
+		var newMessage = new Message(body, user, time);
+		this.messages.push(newMessage);
+		var sourceObj = [];
+		sourceObj.push(newMessage);
+		ulMessages.innerHTML = ulMessages.innerHTML + getTemplateHTML(messagesTemplate.innerHTML, sourceObj);
+		updateListSelection(ulMessages, ulMessages.lastChild);
+
+
 		//alert("Пришло новое сообщение в чат: name=" + user.name + ', login=' + user.login + ', body='+body+', time='+time);
+	};
+	function updateListSelection(ulElement, targetLi) {
+	    ulElement.scrollTop = 10000000;
 	};
 	this.userChangePhoto = function(user)  {
 		var promise = user.getAvatar();
 		promise.then(function(){
-			that.updateUsersHtml();	
-			that.updateMessagesHtml();
+			that.updateUserHtml(user)
+			that.updateMessagesOfUserHtml(user);
 		});
 		alert("Пользователь сменил фото: name=" +user.name + ', login='+user.login);
 	};
-
 	
 	// Подписывем чат на сообщения сервера
 	this.server.connection.onmessage = function(e) {
@@ -310,9 +376,9 @@ function Chat(users, messages, server) {
 	    console.log(e);
 	    alert("Произошла ошибка в чате: " + e.error.message);
 	};
-	
 }
 
+// Объект пользователя
 function User(name, login, isActive) {
 	var that = this;
 	that.isActive = isActive === undefined ? false : isActive;
@@ -366,13 +432,13 @@ function User(name, login, isActive) {
 				if (xhr.status != 200) {
 					 reject(xhr.status + ': ' + xhr.statusText);
 				} else {
-					resolve(xhr.response);
+					resolve(that.login);
 				}
 			}
 		});
 		
 		p.then(function(res) {
-			console.log(res);
+			console.log('Получена фото пользователя с login=' + res);
 		   	var blob = new Blob([xhr.response], {
 	            type: xhr.getResponseHeader("Content-Type")
 	        });
@@ -406,7 +472,6 @@ function User(name, login, isActive) {
 			    			if(item.login !== that.login)
 			    			{
 			    				var newUser = new User(item.name, item.login, true);
-			    				newUser.getAvatar();
 			    				users.push(newUser);
 			    			}
 			    		});
@@ -437,7 +502,6 @@ function User(name, login, isActive) {
 			    try
 			    {
 			    	server.registrationNewUser(name, login);
-			    	that.getAvatar();
 			    }
 			    catch(e)
 			    {

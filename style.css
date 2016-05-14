@@ -15,13 +15,23 @@ ul {
 
 #divChatPanel,
 #leftCol,
-#rightCol,
-#divMessages {
+#rightCol{
 	height: 100%;
 }
 
 #divMessages {
+	height: calc(100% - 28px);
+}
+
+#rightCol {
 	border-left: 1px solid black;
+}
+
+p.title  {
+	margin: 0;
+	margin-left: 10px; 
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
 #inpUserMessage {
@@ -34,8 +44,19 @@ ul {
 
 #ulUsers,
 #ulMessages {
-	height: calc(100% - 50px)
+	height: calc(100% - 50px);
+	border-top: 1px solid black;
 }
+
+.regUser {
+	/*border: 1px solid gray;*/
+	background-color: yellow;
+}
+
+.regUser:hover {
+	cursor: pointer;
+}
+
 
 .hide {
 	display: none;
@@ -56,6 +77,7 @@ ul {
 
 .avatar {
 	float: left;
+	margin: 5px; 
 	height: 50px;
 	width: 50px;
 }
@@ -65,6 +87,18 @@ ul {
 	margin-left: 60px; 
 	padding-left: 10px;
 }
+.messageInfo p {
+	margin: 0px;
+	margin-bottom:10px; 
+	padding-top: 5px;
+}
+.messageInfo p.message{
+	margin-bottom: 0px; 
+}
+#rightCol li:hover {
+	background-color: #f9f9f9;	
+}
+
 .userInfo {
 	min-height: 40px;
 	padding-top: 20px;
@@ -72,15 +106,15 @@ ul {
 
 .messageBlock,
 .userBlock {
-	margin-top: 20px; 
-	margin-left: 20px;
+/*	margin-top: 20px; 
+	margin-left: 20px;*/
 }
 
 li {
 	min-height: 60px;
 }
 
-li:hover {
+.userBlock:hover {
 	background-color: #f9f9f9;
 }
 
@@ -90,11 +124,12 @@ li:hover {
 	height: 100%;
 	background-color: #f9f9f9;
 	z-index: 2;
+	opacity: 0.6;
 }
 
 #divChangeAvatar:hover {
    background: #ddd;
-    border-color: #aaa;
+   border-color: #aaa;
 }
 
 #divChangeAvatar.error {
@@ -109,7 +144,7 @@ li:hover {
 
 
 #divChangeAvatar {
-	position: relative;
+	position: absolute;
 	width: 300px;
 	height: 100px;
 	left: 50%;
@@ -117,12 +152,18 @@ li:hover {
 	margin-top: -50px;
 	margin-left: -150px;  
 	border: 2px dashed gray;
+	z-index: 3;
 }
 
 #imgPreview {
 	height: 80px; 
 	width: 80px;
 	margin-top: 10px;
-	margin-bottom: 10px;
+	margin-bottom: 30px;
 	margin-left: 10px;
+}
+
+#pDragMessage {
+	margin-left: 5px;
+	margin-right: 5px; 
 }
