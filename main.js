@@ -17,23 +17,39 @@ new Promise(function(resolve) {
 	Handlebars.registerHelper("formatTime", function(timestamp) {
 		var d = new Date();
 		d.setTime(timestamp);
-  		return d.toISOString().slice(0, 10);
+  		return d.toLocaleString();
 	});
 
 	// Подписываемся на клик по кнопке "Регистрации пользователя"
 	btnRegistration.addEventListener('click', onClickRegistration);
 	inpUserMessage.addEventListener('keypress', onInpMessageKeyPress);
+	ulUsers.addEventListener('click', onClickChangeAvatar);
+
 	modalWindow = new ModalWindow();
 });
 
 // Обработка клика по аватару зарегистрированного пользователя
 function onClickChangeAvatar(e) {
 	console.log(e);
-	
+	if(!findClosestId(e.target, user.login))
+		return;
 	// Скрываем представление выбранного аватара
 	modalWindow.showPreview(false);
 	// Открываем модальное окно
 	modalWindow.showModal(true);
+}
+
+// Проверяет есть ли в родительских элементах заданный идентификатор
+function findClosestId(curentElement, id) {
+	if(!curentElement)
+		return false;
+
+	if(curentElement.id === id)
+		return true;
+
+	var parent = curentElement.parentElement;
+
+	return findClosestId(parent, id);
 }
 
 // Обработка ввода нового сообщения
@@ -68,6 +84,8 @@ function ModalWindow() {
 	divModalWindow.addEventListener('click', function onClickModalWindow(e) {
 		// По клику на модальном окне, скрываем его
 		that.showModal(false);
+		divChangeAvatar.classList.remove('drop');
+		divChangeAvatar.classList.remove('error');
 	});
 
 	this.showModal = function(visible){
@@ -84,7 +102,12 @@ function ModalWindow() {
 				divChangeAvatar.classList.add('hide');	
 		}
 	};
-	this.showPreview = function(visible) {
+	this.showPreview = function(visible, message) {
+		if(message)
+			pDragMessage.innerHTML = message;
+		else
+			pDragMessage.innerHTML = 'Перетащите сюда фотографию (только jpg, размер не более 512 кб)';
+
 		if(visible) {
 			if(divPreviewBlock.classList.contains('hide'))
 			{
@@ -110,28 +133,47 @@ function ModalWindow() {
 	    divChangeAvatar.classList.add('error');
 	}
 
+	window.addEventListener("dragover",function(e){
+	  e = e || event;
+	  e.preventDefault();
+	},false);
+	window.addEventListener("drop",function(e){
+	  e = e || event;
+	  e.preventDefault();
+	},false);
+
 	divChangeAvatar.addEventListener('dragover', function(e) {
 		if (e.preventDefault) 
 			e.preventDefault();
-	    divChangeAvatar.classList.add('hover');
+		
+		divChangeAvatar.classList.add('hover');
 	    return false;
 	});
 	    
 	divChangeAvatar.addEventListener('dragleave', function(e) {
 		if (e.preventDefault) 
 			 e.preventDefault(); 
+		
 		divChangeAvatar.classList.remove('hover');
 	    return false;
 	});
 
-	divChangeAvatar.addEventListener('drop', function(event) {
-	    event.preventDefault();
-	    divChangeAvatar.classList.remove('hover');
+	divChangeAvatar.addEventListener('drop', function(e) {
+	    e.preventDefault();
+      	divChangeAvatar.classList.remove('hover');
 	    divChangeAvatar.classList.add('drop');
-	    var file = event.dataTransfer.files[0];
+	    var file = e.dataTransfer.files[0];
 		        
 		if (file.size > user.maxAvatarFileSize) {
-		    divChangeAvatar.innerHTML = 'Файл слишком большой!';
+		    that.showError("Файл слишком большой!");
+		    divChangeAvatar.classList.remove('drop');
+		    divChangeAvatar.classList.add('error');
+		    return false;
+		}
+
+		if(file.type !== 'image/jpeg') {
+			that.showPreview(false, "Выберите файл с расширением .jpeg");
+			divChangeAvatar.classList.remove('drop');
 		    divChangeAvatar.classList.add('error');
 		    return false;
 		}
@@ -155,11 +197,13 @@ function ModalWindow() {
 
 	this.onClickUpload = function() {
 		divChangeAvatar.classList.remove('drop');
+		divChangeAvatar.classList.remove('error');
 		that.showModal(false);
 		user.changeAvatar();
 	};
 	this.onClickCancel = function(){
 		divChangeAvatar.classList.remove('drop');
+		divChangeAvatar.classList.remove('error');
 		that.showPreview(false);
 	};
 }
@@ -255,12 +299,14 @@ function Chat(users, messages, server) {
 	// Загружаем все аватарки всех пользователей
 	var promise = this.updateUsersPhoto(this.users);
 	promise.then(
-		response => {
+		function() {
 			// Когда все фотки загружены, делаем обновление страницы по шаблонам 
 			that.updateUsersHtml();
 			that.updateMessagesHtml();
 		},
-		error => alert(error)
+		function(error){
+			alert(error)	
+		} 
 	);
 
 	// Обновляет окно пользователей чата
@@ -268,7 +314,6 @@ function Chat(users, messages, server) {
 		ulUsers.innerHTML = getTemplateHTML(usersTemplate.innerHTML, this.getActiveUsers());
 		var regUserElement = document.getElementById(user.login);
 		regUserElement.classList.add('regUser');
-		regUserElement.addEventListener('click', onClickChangeAvatar);
 	};
 	// Обновляет окно сообщений чата
 	this.updateMessagesHtml = function() {
@@ -301,8 +346,8 @@ function Chat(users, messages, server) {
 		ulUsers.innerHTML = ulUsers.innerHTML + getTemplateHTML(usersTemplate.innerHTML, sourceObj);
 		// Загрузка аватара нового пользователя, после загрузки, обновление его фотки в чате
 		user.getAvatar().then(
-			result => {
-				this.updateUserHtml(user);
+			function() {
+				that.updateUserHtml(user);
 			}
 		)
 		//alert("Новый пользователь вошел в чат: name=" + user.name + ', login=' + user.login);
@@ -337,7 +382,7 @@ function Chat(users, messages, server) {
 			that.updateUserHtml(user)
 			that.updateMessagesOfUserHtml(user);
 		});
-		alert("Пользователь сменил фото: name=" +user.name + ', login='+user.login);
+		//alert("Пользователь сменил фото: name=" +user.name + ', login='+user.login);
 	};
 	
 	// Подписывем чат на сообщения сервера
@@ -411,6 +456,9 @@ function User(name, login, isActive) {
 		data.append('token', this.token);
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', server.httpAddress + '/upload', true); 
+		xhr.onerror = function(e){
+			alert(e.error);
+		}
 		xhr.send(data);
 	};
 	this.checkLogin(login);
@@ -514,7 +562,7 @@ function User(name, login, isActive) {
 			that.token = result;
 			divChatPanel.classList.toggle('hide');
 			divRegPanel.classList.toggle('hide');
-			alert("Создан пользователь. Пользователь зарегистирован в чате. Создан чат.");
+			//alert("Создан пользователь. Пользователь зарегистирован в чате. Создан чат.");
 		},
 		function(error){
 			alert(error);
